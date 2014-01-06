@@ -4,19 +4,21 @@
 /*{{ javascript("jslib/boxtree.js") }}*/
 
 TurbulenzEngine.onload = function onloadFn() {
+	console.log("Game1 by FWirtz");
+	console.log("Version 003_alpha (WIP)");
 	var intervalID;
-	var graphicsDevice = TurbulenzEngine.createGraphicsDevice({});
-	var mathDevice = TurbulenzEngine.createMathDevice({});
+	var graphicsDevice = this.graphicsDevice = TurbulenzEngine.createGraphicsDevice({});
+	var mathDevice = this.mathDevice = TurbulenzEngine.createMathDevice({});
+	var phys2D = this.phys2D = Physics2DDevice.create();
 
-	var phys2D = Physics2DDevice.create();
+	var scale = this.scale = 30;
+	var viewWidth = this.viewWidth = 1200 / scale;
+	var viewHeight = this.viewHeight = 675 / scale;
 
-	var viewWidth = this.viewWidth = 30;
-	var viewHeight = this.viewHeight = 22;
-
-	var draw2D = Draw2D.create({
+	var draw2D = this.draw2D = Draw2D.create({
 		graphicsDevice : graphicsDevice
 	});
-	var phys2DDebug = Physics2DDebugDraw.create({
+	var phys2DDebug = this.phys2DDebug = Physics2DDebugDraw.create({
 		graphicsDevice : graphicsDevice
 	});
 
@@ -27,24 +29,11 @@ TurbulenzEngine.onload = function onloadFn() {
 	phys2DDebug.setPhysics2DViewport([0, 0, viewWidth, viewHeight]);
 
 	//WORLD
-	var world = phys2D.createWorld({
+	var world = this.world = phys2D.createWorld({
 		gravity : [0, 20]
 	});
 
-	var box = {
-		width : 1,
-		height : 1,
-		position : [viewWidth / 2, viewHeight / 2]
-	};
-	box.shape = phys2D.createPolygonShape({
-		vertices : phys2D.createBoxVertices(box.width, box.height)
-	});
-	box.rigidBody = phys2D.createRigidBody({
-		type : 'dynamic',
-		shapes : [box.shape],
-		position : box.position
-	});
-	world.addRigidBody(box.rigidBody);
+	createObjects();
 
 	var realTime = 0;
 	var prevTime = TurbulenzEngine.time;
@@ -52,7 +41,7 @@ TurbulenzEngine.onload = function onloadFn() {
 	function tick() {
 		var curTime = TurbulenzEngine.time;
 		var timeDelta = (curTime - prevTime);
-		
+
 		if (timeDelta > (1 / 20)) {
 			timeDelta = (1 / 20);
 		}
@@ -63,12 +52,11 @@ TurbulenzEngine.onload = function onloadFn() {
 		if (graphicsDevice.beginFrame()) {
 			//RENDER HERE!!!
 
-			while(world.simulatedTime < realTime) {
-				world.step(1/60);
+			while (world.simulatedTime < realTime) {
+				world.step(1 / 60);
 			}
-			
 
-			console.log("IT FUCKING RENDERED!!");
+			graphicsDevice.clear();
 
 			phys2DDebug.setScreenViewport(draw2D.getScreenSpaceViewport());
 			phys2DDebug.begin();
@@ -77,6 +65,74 @@ TurbulenzEngine.onload = function onloadFn() {
 
 			graphicsDevice.endFrame();
 		}
+	}
+
+	function createObjects() {
+		var car = this.car = {
+			position : [viewWidth / 2, viewHeight / 2]
+		};
+		car.shape1 = phys2D.createPolygonShape({
+			vertices : [[0, 0], [0, -50 / scale], [25 / scale, -100 / scale], [75 / scale, -100 / scale], [125 / scale, -50 / scale]]
+		});
+		car.shape2 = phys2D.createPolygonShape({
+			vertices : [[0, 0], [125 / scale, -50 / scale], [150 / scale, -50 / scale], [150 / scale, 0]]
+		});
+		car.wheel1 = phys2D.createCircleShape({
+			radius : 25 / scale,
+			origin : [0, 0]
+		});
+		car.wheel1_rB = phys2D.createRigidBody({
+			type : 'dynamic',
+			shapes : [car.wheel1],
+			position : [(viewWidth / 2) + (25 / scale), viewHeight / 2]
+		});
+		car.wheel2 = phys2D.createCircleShape({
+			radius : 25 / scale,
+			origin : [0, 0]
+		});
+		car.wheel2_rB = phys2D.createRigidBody({
+			type: 'dynamic',
+			shapes: [car.wheel2],
+			position: [(viewWidth/2) + (125 / scale) , viewHeight/2]
+		});
+		car.rigidBody = phys2D.createRigidBody({
+			type : 'dynamic',
+			shapes : [car.shape1, car.shape2],
+			position : car.position
+		});
+		car.wConstraint1 = phys2D.createWeldConstraint({
+			bodyA: car.rigidBody,
+			bodyB: car.wheel1_rB,
+			anchorA: [25/scale, 0],
+			anchorB: [0, 0]
+		});
+		car.wConstraint2 = phys2D.createWeldConstraint({
+			bodyA: car.rigidBody,
+			bodyB: car.wheel2_rB,
+			anchorA: [125/scale, 0],
+			anchorB: [0, 0]
+		});
+		
+		world.addRigidBody(car.rigidBody);
+		world.addRigidBody(car.wheel1_rB);
+		world.addRigidBody(car.wheel2_rB);
+		world.addConstraint(car.wConstraint1);
+		world.addConstraint(car.wConstraint2);
+
+		var floor = this.floor = {
+			width : viewWidth,
+			height : 2,
+			position : [viewWidth / 2, viewHeight]
+		};
+		floor.shape = phys2D.createPolygonShape({
+			vertices : phys2D.createBoxVertices(floor.width, floor.height)
+		});
+		floor.rigidBody = phys2D.createRigidBody({
+			type : 'static',
+			shapes : [floor.shape],
+			position : floor.position
+		});
+		world.addRigidBody(floor.rigidBody);
 	}
 
 

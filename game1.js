@@ -72,14 +72,20 @@ TurbulenzEngine.onload = function onloadFn() {
 			position : [viewWidth / 2, viewHeight / 2]
 		};
 		car.shape1 = phys2D.createPolygonShape({
-			vertices : [[0, 0], [0, -50 / scale], [25 / scale, -100 / scale], [75 / scale, -100 / scale], [125 / scale, -50 / scale]]
+			vertices : [[0, 0], [0, -50 / scale], [25 / scale, -100 / scale], [75 / scale, -100 / scale], [125 / scale, -50 / scale]],
+			group: 4,
+			mask: 9
 		});
 		car.shape2 = phys2D.createPolygonShape({
-			vertices : [[0, 0], [125 / scale, -50 / scale], [150 / scale, -50 / scale], [150 / scale, 0]]
+			vertices : [[0, 0], [125 / scale, -50 / scale], [150 / scale, -50 / scale], [150 / scale, 0]],
+			group: 4,
+			mask: 9
 		});
 		car.wheel1 = phys2D.createCircleShape({
 			radius : 25 / scale,
-			origin : [0, 0]
+			origin : [0, 0],
+			group: 4,
+			mask: 9
 		});
 		car.wheel1_rB = phys2D.createRigidBody({
 			type : 'dynamic',
@@ -88,7 +94,9 @@ TurbulenzEngine.onload = function onloadFn() {
 		});
 		car.wheel2 = phys2D.createCircleShape({
 			radius : 25 / scale,
-			origin : [0, 0]
+			origin : [0, 0],
+			group: 4,
+			mask: 9
 		});
 		car.wheel2_rB = phys2D.createRigidBody({
 			type: 'dynamic',
@@ -118,6 +126,8 @@ TurbulenzEngine.onload = function onloadFn() {
 		world.addRigidBody(car.wheel2_rB);
 		world.addConstraint(car.wConstraint1);
 		world.addConstraint(car.wConstraint2);
+		console.log(car.shape1.computeCenterOfMass());
+		console.log(car.shape2.computeCenterOfMass());
 
 		var floor = this.floor = {
 			width : viewWidth,
@@ -140,13 +150,13 @@ TurbulenzEngine.onload = function onloadFn() {
 		if (intervalID) {
 			TurbulenzEngine.clearInterval(intervalID);
 		}
-		//Aufraeumen!! :$
+		//Clear up the mess...!! :$
 		md = null;
 		gd = null;
 	};
 
 	TurbulenzEngine.onerror = function gameErrorFn(msg) {
-		//Fehlermeldung ausgeben!
+		//print Errors
 
 		window.alert(msg);
 	};
